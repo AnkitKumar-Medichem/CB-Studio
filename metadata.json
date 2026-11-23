@@ -1,0 +1,6 @@
+{
+  "name": "CB Studio — 3D Molecular Bonding & Hybridization",
+  "description": "Interactive 3D molecular bonding visualizer using VSEPR theory with SMILES parsing, orbital hybridization, and lone-pair geometry.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
