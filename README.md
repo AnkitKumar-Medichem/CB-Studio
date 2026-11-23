@@ -16,6 +16,8 @@ npm run lint
 npm run build
 ```
 
+Running `npm run build` outputs to `dist/` and automatically syncs the static bundle to `app_dist/` for Streamlit deployment.
+
 ## Running with Streamlit Locally
 
 ```bash
@@ -26,9 +28,6 @@ streamlit run streamlit_app.py
 
 ## Deploying to Streamlit Community Cloud
 
-1. Build the static frontend so the `dist/` directory is up to date:
-   ```bash
-   npm run build
-   ```
-2. Commit all files, including `dist/`, `streamlit_app.py`, `requirements.txt`, and `.streamlit/config.toml`, and push to GitHub.
+1. Run `npm run build` so `app_dist/` is up to date.
+2. Push the repository (including `app_dist/`, `streamlit_app.py`, `requirements.txt`, and `.streamlit/config.toml`) to GitHub.
 3. On Streamlit Community Cloud, create a new app connected to your GitHub repository and set the main file path to `streamlit_app.py`.

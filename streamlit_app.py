@@ -1,4 +1,6 @@
 from pathlib import Path
+import shutil
+import subprocess
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -8,7 +10,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-DIST_DIR = Path(__file__).resolve().parent / "dist"
+BASE_DIR = Path(__file__).resolve().parent
+CANDIDATE_DIRS = [BASE_DIR / "dist", BASE_DIR / "app_dist"]
 
 st.markdown(
     """
@@ -46,9 +49,31 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if not (DIST_DIR / "index.html").is_file():
-    st.error("Build output not found in dist/. Run 'npm run build' and commit dist/ before deploying.")
+
+def resolve_bundle_dir() -> Path | None:
+    for candidate in CANDIDATE_DIRS:
+        if (candidate / "index.html").is_file():
+            return candidate
+    return None
+
+
+SERVE_DIR = resolve_bundle_dir()
+
+if SERVE_DIR is None:
+    npm_cmd = shutil.which("npm")
+    if npm_cmd is not None:
+        with st.spinner("Building CB Studio frontend..."):
+            if not (BASE_DIR / "node_modules").is_dir():
+                subprocess.run([npm_cmd, "install"], cwd=BASE_DIR, check=True)
+            subprocess.run([npm_cmd, "run", "build"], cwd=BASE_DIR, check=True)
+        SERVE_DIR = resolve_bundle_dir()
+
+if SERVE_DIR is None:
+    st.error(
+        "Built frontend not found in dist/ or app_dist/. "
+        "Run 'npm run build' locally and push app_dist/ to GitHub before deploying."
+    )
     st.stop()
 
-_cb_studio_component = components.declare_component("cb_studio", path=str(DIST_DIR))
+_cb_studio_component = components.declare_component("cb_studio", path=str(SERVE_DIR))
 _cb_studio_component(key="cb_studio_app")
