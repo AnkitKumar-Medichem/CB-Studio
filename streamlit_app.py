@@ -1,17 +1,20 @@
+from __future__ import annotations
+
 from pathlib import Path
-import shutil
-import subprocess
+import tempfile
+
 import streamlit as st
 import streamlit.components.v1 as components
+
+from cb_studio.chemistry import build_molecule_with_rdkit
+from cb_studio.frontend import build_frontend_html
+from cb_studio.presets import MOLECULE_PRESETS
 
 st.set_page_config(
     page_title="CB Studio",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-
-BASE_DIR = Path(__file__).resolve().parent
-CANDIDATE_DIRS = [BASE_DIR / "dist", BASE_DIR / "app_dist"]
 
 st.markdown(
     """
@@ -50,30 +53,58 @@ st.markdown(
 )
 
 
-def resolve_bundle_dir() -> Path | None:
-    for candidate in CANDIDATE_DIRS:
-        if (candidate / "index.html").is_file():
-            return candidate
-    return None
-
-
-SERVE_DIR = resolve_bundle_dir()
-
-if SERVE_DIR is None:
-    npm_cmd = shutil.which("npm")
-    if npm_cmd is not None:
-        with st.spinner("Building CB Studio frontend..."):
-            if not (BASE_DIR / "node_modules").is_dir():
-                subprocess.run([npm_cmd, "install"], cwd=BASE_DIR, check=True)
-            subprocess.run([npm_cmd, "run", "build"], cwd=BASE_DIR, check=True)
-        SERVE_DIR = resolve_bundle_dir()
-
-if SERVE_DIR is None:
-    st.error(
-        "Built frontend not found in dist/ or app_dist/. "
-        "Run 'npm run build' locally and push app_dist/ to GitHub before deploying."
+@st.cache_resource
+def _init_cb_studio_component():
+    default_preset = next(
+        (p for p in MOLECULE_PRESETS if p["id"] == "sf4"),
+        MOLECULE_PRESETS[0],
     )
-    st.stop()
+    default_molecule = build_molecule_with_rdkit(
+        default_preset["smiles"],
+        name=default_preset["name"],
+        notes=default_preset["description"],
+    )
+    comp_dir = Path(tempfile.gettempdir()) / "cb_studio_py_component"
+    comp_dir.mkdir(parents=True, exist_ok=True)
+    (comp_dir / "index.html").write_text(
+        build_frontend_html(default_molecule),
+        encoding="utf-8",
+    )
+    component = components.declare_component("cb_studio", path=str(comp_dir))
+    return component, default_molecule
 
-_cb_studio_component = components.declare_component("cb_studio", path=str(SERVE_DIR))
-_cb_studio_component(key="cb_studio_app")
+
+cb_studio_component, default_molecule = _init_cb_studio_component()
+
+if "cb_molecule" not in st.session_state:
+    st.session_state.cb_molecule = default_molecule
+if "cb_error" not in st.session_state:
+    st.session_state.cb_error = None
+if "cb_last_req_id" not in st.session_state:
+    st.session_state.cb_last_req_id = None
+
+event = cb_studio_component(
+    molecule=st.session_state.cb_molecule,
+    error=st.session_state.cb_error,
+    req_id=st.session_state.cb_last_req_id,
+    key="cb_studio_app",
+)
+
+if isinstance(event, dict):
+    req_id = event.get("reqId")
+    if req_id is not None and req_id != st.session_state.cb_last_req_id:
+        st.session_state.cb_last_req_id = req_id
+        smiles = str(event.get("smiles") or "").strip()
+        name = event.get("name")
+        notes = event.get("notes")
+        try:
+            st.session_state.cb_molecule = build_molecule_with_rdkit(
+                smiles,
+                name=name,
+                notes=notes,
+            )
+            st.session_state.cb_error = None
+        except Exception as exc:
+            st.session_state.cb_error = str(exc) or "Invalid SMILES string."
+        st.rerun()
+

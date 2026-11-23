@@ -28,21 +28,6 @@ export default defineConfig(() => {
           }
         },
       },
-      {
-        name: 'sync-streamlit-bundle',
-        apply: 'build',
-        closeBundle(error?: Error): void {
-          if (error) {
-            return;
-          }
-          const distDir = path.resolve(__dirname, 'dist');
-          const appDistDir = path.resolve(__dirname, 'app_dist');
-          if (fs.existsSync(distDir)) {
-            fs.rmSync(appDistDir, {recursive: true, force: true});
-            fs.cpSync(distDir, appDistDir, {recursive: true, force: true});
-          }
-        },
-      },
     ],
     resolve: {
       alias: {
