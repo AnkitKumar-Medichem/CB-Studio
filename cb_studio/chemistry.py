@@ -4,6 +4,7 @@ import io
 import logging
 import math
 import re
+import threading
 from typing import Any
 
 import rdkit
@@ -16,6 +17,21 @@ except Exception:
     rd_inchi = None
 
 from .elements import ELEMENTS, get_element_by_atomic_number, get_element_info
+
+_RDKIT_LOCK = threading.Lock()
+_RDKIT_LOG_INITIALIZED = False
+
+
+def _ensure_rdkit_logger() -> None:
+    global _RDKIT_LOG_INITIALIZED
+    if _RDKIT_LOG_INITIALIZED:
+        return
+    try:
+        rdBase.LogToPythonLogger()
+        RDLogger.EnableLog("rdApp.error")
+    except Exception:
+        pass
+    _RDKIT_LOG_INITIALIZED = True
 
 
 def _v3(x: float = 0.0, y: float = 0.0, z: float = 0.0) -> dict[str, float]:
@@ -133,34 +149,33 @@ def parse_and_calculate_with_rdkit(raw_smiles: str) -> tuple[dict[str, Any], dic
     if re.search(r"\s", smiles):
         raise ValueError("SMILES strings cannot contain whitespace.")
 
-    log_stream = io.StringIO()
-    handler = logging.StreamHandler(log_stream)
-    rdkit_logger = logging.getLogger("rdkit")
-    prev_level = rdkit_logger.level
-    rdkit_logger.setLevel(logging.ERROR)
-    rdkit_logger.addHandler(handler)
-    try:
-        rdBase.LogToPythonLogger()
-        RDLogger.EnableLog("rdApp.error")
-    except Exception:
-        pass
+    with _RDKIT_LOCK:
+        _ensure_rdkit_logger()
+        log_stream = io.StringIO()
+        handler = logging.StreamHandler(log_stream)
+        rdkit_logger = logging.getLogger("rdkit")
+        prev_level = rdkit_logger.level
+        rdkit_logger.setLevel(logging.ERROR)
+        rdkit_logger.addHandler(handler)
+        try:
+            base_mol = Chem.MolFromSmiles(smiles)
+            sanitized = True
 
-    try:
-        base_mol = Chem.MolFromSmiles(smiles)
-        sanitized = True
+            if base_mol is None:
+                log_msg = log_stream.getvalue()
+                if re.search(r"Explicit valence", log_msg, re.I):
+                    log_stream.truncate(0)
+                    log_stream.seek(0)
+                    base_mol = Chem.MolFromSmiles(smiles, sanitize=False)
+                    sanitized = False
+                else:
+                    raise ValueError(_format_rdkit_error(log_msg, smiles))
 
-        if base_mol is None:
-            log_msg = log_stream.getvalue()
-            if re.search(r"Explicit valence", log_msg, re.I):
-                log_stream.truncate(0)
-                log_stream.seek(0)
-                base_mol = Chem.MolFromSmiles(smiles, sanitize=False)
-                sanitized = False
-            else:
-                raise ValueError(_format_rdkit_error(log_msg, smiles))
-
-        if base_mol is None:
-            raise ValueError(_format_rdkit_error(log_stream.getvalue(), smiles))
+            if base_mol is None:
+                raise ValueError(_format_rdkit_error(log_stream.getvalue(), smiles))
+        finally:
+            rdkit_logger.removeHandler(handler)
+            rdkit_logger.setLevel(prev_level)
 
         canonical_smiles = smiles
         try:
@@ -335,9 +350,6 @@ def parse_and_calculate_with_rdkit(raw_smiles: str) -> tuple[dict[str, Any], dic
             "rdkitCoords2D": rdkit_coords_2d,
         }
         return graph, descriptors
-    finally:
-        rdkit_logger.removeHandler(handler)
-        rdkit_logger.setLevel(prev_level)
 
 
 def get_electron_geometry(steric_number: int) -> str:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 import tempfile
 
 import streamlit as st
@@ -40,10 +41,17 @@ st.markdown(
       [data-testid="stVerticalBlock"] {
         gap: 0 !important;
       }
-      iframe[title*="cb_studio"] {
+      [data-testid="stCustomComponentV1"] {
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+      }
+      iframe[title*="cb_studio"],
+      [data-testid="stCustomComponentV1"] iframe {
         width: 100vw !important;
         height: 100vh !important;
         height: 100dvh !important;
+        min-height: 640px !important;
         border: none !important;
         display: block !important;
       }
@@ -54,7 +62,7 @@ st.markdown(
 
 
 @st.cache_resource
-def _init_cb_studio_component():
+def _prepare_component_assets():
     default_preset = next(
         (p for p in MOLECULE_PRESETS if p["id"] == "sf4"),
         MOLECULE_PRESETS[0],
@@ -64,20 +72,28 @@ def _init_cb_studio_component():
         name=default_preset["name"],
         notes=default_preset["description"],
     )
-    comp_dir = Path(tempfile.gettempdir()) / "cb_studio_py_component"
-    comp_dir.mkdir(parents=True, exist_ok=True)
-    (comp_dir / "index.html").write_text(
-        build_frontend_html(default_molecule),
-        encoding="utf-8",
-    )
-    component = components.declare_component("cb_studio", path=str(comp_dir))
-    return component, default_molecule
+    pkg_comp_dir = Path(__file__).resolve().parent / "cb_studio" / "component"
+    html = build_frontend_html(default_molecule)
+    try:
+        pkg_comp_dir.mkdir(parents=True, exist_ok=True)
+        (pkg_comp_dir / "index.html").write_text(html, encoding="utf-8")
+        comp_dir = pkg_comp_dir
+    except OSError:
+        comp_dir = Path(tempfile.gettempdir()) / "cb_studio_py_component"
+        comp_dir.mkdir(parents=True, exist_ok=True)
+        bundle_src = pkg_comp_dir / "three.bundle.js"
+        if bundle_src.is_file():
+            shutil.copy2(bundle_src, comp_dir / "three.bundle.js")
+        (comp_dir / "index.html").write_text(html, encoding="utf-8")
+
+    return str(comp_dir), default_molecule
 
 
-cb_studio_component, default_molecule = _init_cb_studio_component()
+_comp_dir, _default_molecule = _prepare_component_assets()
+cb_studio_component = components.declare_component("cb_studio", path=_comp_dir)
 
 if "cb_molecule" not in st.session_state:
-    st.session_state.cb_molecule = default_molecule
+    st.session_state.cb_molecule = _default_molecule
 if "cb_error" not in st.session_state:
     st.session_state.cb_error = None
 if "cb_last_req_id" not in st.session_state:
@@ -107,4 +123,5 @@ if isinstance(event, dict):
         except Exception as exc:
             st.session_state.cb_error = str(exc) or "Invalid SMILES string."
         st.rerun()
+
 

@@ -30,21 +30,13 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CB Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
     <style>{APP_CSS}</style>
-    <script type="importmap">
-      {{
-        "imports": {{
-          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-        }}
-      }}
-    </script>
   </head>
   <body class="bg-white text-slate-900 antialiased selection:bg-sky-500/20 selection:text-slate-900">
     <div id="root" class="h-screen w-screen overflow-hidden">
@@ -305,9 +297,48 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
 
     <script id="cb-boot-data" type="application/json">{boot_data}</script>
 
+    <script>
+      (function () {{
+        window.__cbPendingRender = null;
+        window.__cbOnRender = null;
+
+        window.addEventListener('message', function (event) {{
+          var data = event.data;
+          if (!data || data.type !== 'streamlit:render') return;
+          if (typeof window.__cbOnRender === 'function') {{
+            window.__cbOnRender(data.args || {{}});
+          }} else {{
+            window.__cbPendingRender = data.args || {{}};
+          }}
+        }});
+
+        if (window.parent && window.parent !== window) {{
+          var syncHeight = function () {{
+            var h = window.innerHeight || 760;
+            try {{
+              if (window.parent.innerHeight) h = window.parent.innerHeight;
+            }} catch (e) {{}}
+            window.parent.postMessage(
+              {{ isStreamlitMessage: true, type: 'streamlit:setFrameHeight', height: Math.max(640, h) }},
+              '*'
+            );
+          }};
+          window.parent.postMessage(
+            {{ isStreamlitMessage: true, type: 'streamlit:componentReady', apiVersion: 1 }},
+            '*'
+          );
+          syncHeight();
+          window.addEventListener('resize', syncHeight);
+          try {{
+            window.parent.addEventListener('resize', syncHeight);
+          }} catch (e) {{}}
+        }}
+      }})();
+    </script>
+
     <script type="module">
-      import * as THREE from 'three';
-      import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
+      import * as THREE from './three.bundle.js';
+      import {{ OrbitControls }} from './three.bundle.js';
 
       const BOOT = JSON.parse(document.getElementById('cb-boot-data').textContent);
 
@@ -526,46 +557,48 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
           return Math.max(4.6, Math.min(26, maxR * 2.25));
         }}
 
-        const isSoftwareGl = detectSoftwareWebGL();
-        const width = container.clientWidth || 800;
-        const height = container.clientHeight || 600;
+        let renderer;
+        try {{
+          const isSoftwareGl = detectSoftwareWebGL();
+          const width = container.clientWidth || 800;
+          const height = container.clientHeight || 600;
 
-        const renderer = new THREE.WebGLRenderer({{
-          antialias: !isSoftwareGl,
-          powerPreference: 'high-performance',
-          preserveDrawingBuffer: false,
-        }});
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.toneMapping = THREE.NoToneMapping;
-        renderer.toneMappingExposure = 1.0;
-        renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2));
-        renderer.setSize(width, height);
-        renderer.shadowMap.enabled = false;
-        renderer.domElement.style.display = 'block';
-        renderer.domElement.style.width = '100%';
-        renderer.domElement.style.height = '100%';
-        mount.appendChild(renderer.domElement);
+          renderer = new THREE.WebGLRenderer({{
+            antialias: !isSoftwareGl,
+            powerPreference: 'high-performance',
+            preserveDrawingBuffer: false,
+          }});
+          renderer.outputColorSpace = THREE.SRGBColorSpace;
+          renderer.toneMapping = THREE.NoToneMapping;
+          renderer.toneMappingExposure = 1.0;
+          renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(width, height);
+          renderer.shadowMap.enabled = false;
+          renderer.domElement.style.display = 'block';
+          renderer.domElement.style.width = '100%';
+          renderer.domElement.style.height = '100%';
+          mount.appendChild(renderer.domElement);
 
-        renderer.domElement.addEventListener('webglcontextlost', (e) => {{
-          e.preventDefault();
-          contextLostBanner.classList.remove('hidden');
-        }});
-        renderer.domElement.addEventListener('webglcontextrestored', () => {{
-          contextLostBanner.classList.add('hidden');
-        }});
+          renderer.domElement.addEventListener('webglcontextlost', (e) => {{
+            e.preventDefault();
+            contextLostBanner.classList.remove('hidden');
+          }});
+          renderer.domElement.addEventListener('webglcontextrestored', () => {{
+            contextLostBanner.classList.add('hidden');
+          }});
 
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xffffff);
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color(0xffffff);
 
-        const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 150);
-        camera.position.set(2.8, 2.2, 5.5);
+          const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 150);
+          camera.position.set(2.8, 2.2, 5.5);
 
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = !isSoftwareGl;
-        controls.dampingFactor = 0.065;
-        controls.minDistance = 2.0;
-        controls.maxDistance = 38;
-        controls.enablePan = true;
+          const controls = new OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = !isSoftwareGl;
+          controls.dampingFactor = 0.065;
+          controls.minDistance = 2.0;
+          controls.maxDistance = 38;
+          controls.enablePan = true;
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
@@ -1202,6 +1235,12 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
 
         if (!isSoftwareGl) renderer.compile(scene, camera);
         return {{ rebuildScene, resetCamera, focusAtom, exportPng, requestRender }};
+        }} catch (err) {{
+          contextLostBanner.textContent = 'WebGL 3D viewport unavailable in this browser context.';
+          contextLostBanner.classList.remove('hidden');
+          const noop = () => {{}};
+          return {{ rebuildScene: noop, resetCamera: noop, focusAtom: noop, exportPng: noop, requestRender: noop }};
+        }}
       }})();
 
       function renderErrorBox() {{
@@ -1701,10 +1740,8 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
       }});
 
       // Receive molecule updates computed in Python RDKit via Streamlit render messages
-      window.addEventListener('message', (event) => {{
-        const data = event.data;
-        if (!data || data.type !== 'streamlit:render') return;
-        const args = data.args || {{}};
+      function handleStreamlitRender(args) {{
+        args = args || {{}};
         const reqId = args.req_id ?? null;
 
         if (reqId !== null && reqId === state.lastHandledReqId) {{
@@ -1731,33 +1768,16 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
           }}
           syncUI();
         }}
-      }});
-
-      // Streamlit iframe lifecycle handshake
-      if (window.parent && window.parent !== window) {{
-        window.parent.postMessage(
-          {{ isStreamlitMessage: true, type: 'streamlit:componentReady', apiVersion: 1 }},
-          '*'
-        );
-        const syncHeight = () => {{
-          let h = window.innerHeight || 760;
-          try {{
-            if (window.parent.innerHeight) h = window.parent.innerHeight;
-          }} catch {{}}
-          window.parent.postMessage(
-            {{ isStreamlitMessage: true, type: 'streamlit:setFrameHeight', height: Math.max(640, h) }},
-            '*'
-          );
-        }};
-        syncHeight();
-        window.addEventListener('resize', syncHeight);
-        try {{
-          window.parent.addEventListener('resize', syncHeight);
-        }} catch {{}}
       }}
 
+      window.__cbOnRender = handleStreamlitRender;
       initModalStaticContent();
       syncUI();
+      if (window.__cbPendingRender) {{
+        const pending = window.__cbPendingRender;
+        window.__cbPendingRender = null;
+        handleStreamlitRender(pending);
+      }}
     </script>
   </body>
 </html>
