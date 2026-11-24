@@ -7,16 +7,6 @@ import React, {
 } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import {
-  RotateCcw,
-  Play,
-  Pause,
-  Tag,
-  Compass,
-  Sparkles,
-  Box,
-  CircleDot,
-} from 'lucide-react';
 import { AnalyzedAtom, MoleculeModel, Vec3 } from '../chemistry/types';
 
 export type RenderStyle = 'ball-stick' | 'space-fill' | 'wireframe';
@@ -32,19 +22,12 @@ interface MoleculeViewport3DProps {
   selectedAtomId: number | null;
   onSelectAtom: (atomId: number | null) => void;
   renderStyle: RenderStyle;
-  onChangeRenderStyle: (style: RenderStyle) => void;
   showLonePairs: boolean;
-  onToggleLonePairs: () => void;
   showHybridOrbitals: boolean;
-  onToggleHybridOrbitals: () => void;
   showBondAngles: boolean;
-  onToggleBondAngles: () => void;
   showVseprCage: boolean;
-  onToggleVseprCage: () => void;
   showLabels: boolean;
-  onToggleLabels: () => void;
   autoSpin: boolean;
-  onToggleAutoSpin: () => void;
 }
 
 // Reusable scratch math objects (zero GC in render loop)
@@ -123,19 +106,12 @@ export const MoleculeViewport3D = forwardRef<
     selectedAtomId,
     onSelectAtom,
     renderStyle,
-    onChangeRenderStyle,
     showLonePairs,
-    onToggleLonePairs,
     showHybridOrbitals,
-    onToggleHybridOrbitals,
     showBondAngles,
-    onToggleBondAngles,
     showVseprCage,
-    onToggleVseprCage,
     showLabels,
-    onToggleLabels,
     autoSpin,
-    onToggleAutoSpin,
   },
   ref
 ) {
@@ -1238,7 +1214,7 @@ export const MoleculeViewport3D = forwardRef<
 
       {/* Top-Left Minimal Molecule Readout */}
       {molecule && (
-        <div className="pointer-events-none absolute top-3.5 left-4 z-10 max-w-[calc(100%-10.5rem)]">
+        <div className="pointer-events-none absolute top-3.5 left-4 z-10 max-w-[calc(100%-2rem)]">
           <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
             <h2 className="text-lg font-semibold tracking-tight text-slate-900">
               {molecule.name || molecule.summary.formula}
@@ -1339,169 +1315,6 @@ export const MoleculeViewport3D = forwardRef<
         </div>
       )}
 
-      {/* Right-Aligned Column: Top Legend + Permanent Control Panel (Collision-Free) */}
-      <div className="pointer-events-none absolute top-3.5 right-3.5 bottom-3.5 z-20 flex flex-col items-end justify-start gap-2.5">
-        {/* Top-Right Minimal Lone-Pair Color Key */}
-        <div className="hidden sm:flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600 shrink-0">
-          <span className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className="inline-block h-2 w-2 rounded-full bg-amber-600 shrink-0" />
-            <span>Localized LP</span>
-          </span>
-          <span className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className="inline-block h-2 w-2 rounded-full bg-violet-600 shrink-0" />
-            <span>π-conjugated LP</span>
-          </span>
-        </div>
-
-        {/* Permanent Right-Docked Minimalist Control Panel */}
-        <div
-          className="pointer-events-auto my-auto flex flex-col gap-1.5 rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm max-h-full overflow-y-auto lab-scroll"
-          style={{ width: '132px' }}
-        >
-          {/* Representation Segmented Control */}
-          <div className="flex flex-col gap-0.5 rounded-md bg-slate-100 p-0.5">
-            {(
-              [
-                ['ball-stick', 'Ball & Stick'],
-                ['space-fill', 'Space-Fill'],
-                ['wireframe', 'Wireframe'],
-              ] as const
-            ).map(([mode, label]) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => onChangeRenderStyle(mode)}
-                className={`flex h-6.5 w-full items-center px-2 text-left text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
-                  renderStyle === mode
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="h-px w-full bg-slate-200 shrink-0" />
-
-          {/* Chemistry Overlay Toggles */}
-          <div className="flex flex-col gap-1">
-            <button
-              type="button"
-              onClick={onToggleLonePairs}
-              className={`flex h-6.5 w-full items-center gap-1.5 rounded-md px-2 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
-                showLonePairs
-                  ? 'bg-amber-50 border-amber-300 text-amber-900'
-                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <CircleDot className="h-3.5 w-3.5 shrink-0" />
-              <span>Lone Pairs</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onToggleHybridOrbitals}
-              className={`flex h-6.5 w-full items-center gap-1.5 rounded-md px-2 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
-                showHybridOrbitals
-                  ? 'bg-sky-50 border-sky-300 text-sky-900'
-                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5 shrink-0" />
-              <span>Orbitals</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onToggleBondAngles}
-              className={`flex h-6.5 w-full items-center gap-1.5 rounded-md px-2 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
-                showBondAngles
-                  ? 'bg-sky-50 border-sky-300 text-sky-900'
-                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <Compass className="h-3.5 w-3.5 shrink-0" />
-              <span>Angles</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onToggleVseprCage}
-              className={`flex h-6.5 w-full items-center gap-1.5 rounded-md px-2 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
-                showVseprCage
-                  ? 'bg-sky-50 border-sky-300 text-sky-900'
-                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <Box className="h-3.5 w-3.5 shrink-0" />
-              <span>Cage</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onToggleLabels}
-              className={`flex h-6.5 w-full items-center gap-1.5 rounded-md px-2 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
-                showLabels
-                  ? 'bg-slate-900 border-slate-900 text-white'
-                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <Tag className="h-3.5 w-3.5 shrink-0" />
-              <span>Labels</span>
-            </button>
-          </div>
-
-          <div className="h-px w-full bg-slate-200 shrink-0" />
-
-          {/* Motion & Camera Actions */}
-          <div className="flex flex-col gap-1">
-            <button
-              type="button"
-              onClick={onToggleAutoSpin}
-              className={`flex h-6.5 w-full items-center gap-1.5 rounded-md px-2 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
-                autoSpin
-                  ? 'bg-slate-900 border-slate-900 text-white'
-                  : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {autoSpin ? (
-                <Pause className="h-3.5 w-3.5 shrink-0" />
-              ) : (
-                <Play className="h-3.5 w-3.5 shrink-0" />
-              )}
-              <span>{autoSpin ? 'Pause' : 'Spin'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const s = sceneRefs.current;
-                if (!s) return;
-                const d = s.idealDistance;
-                s.moleculeGroup.rotation.set(0, 0, 0);
-                s.overlayGroup.rotation.set(0, 0, 0);
-                if (s.isSoftwareGl) {
-                  s.camera.position.set(d * 0.45, d * 0.35, d * 0.88);
-                  s.controls.target.set(0, 0, 0);
-                  s.controls.update();
-                  s.requestRender();
-                } else {
-                  s.cameraGoal = {
-                    pos: new THREE.Vector3(d * 0.45, d * 0.35, d * 0.88),
-                    target: new THREE.Vector3(0, 0, 0),
-                  };
-                  s.requestRender();
-                }
-              }}
-              className="flex h-6.5 w-full items-center gap-1.5 rounded-md px-2 text-xs font-medium border border-slate-200 bg-white text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap cursor-pointer"
-            >
-              <RotateCcw className="h-3.5 w-3.5 shrink-0" />
-              <span>Reset</span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 });

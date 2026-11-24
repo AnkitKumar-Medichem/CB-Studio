@@ -1,10 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
+  Box,
   Camera,
   ChevronRight,
+  CircleDot,
+  Compass,
   Crosshair,
-  HelpCircle,
+  Pause,
+  Play,
+  RotateCcw,
+  Sparkles,
+  Tag,
   X,
 } from 'lucide-react';
 import {
@@ -193,96 +200,17 @@ export default function App() {
     : molecule.atoms.filter((a) => a.symbol !== 'H');
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-white text-slate-900">
-      {/* Top Bar: Aligned 3-Zone Header */}
-      <header className="grid h-11 shrink-0 grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-slate-200 bg-white px-4">
-        <a
-          href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab('atom');
-          }}
-          className="justify-self-start text-base font-semibold tracking-tight text-slate-900 whitespace-nowrap"
-        >
-          CB Studio
-        </a>
-
-        <nav className="hidden md:flex justify-self-center items-center gap-6 text-xs font-medium text-slate-500">
-          <button
-            type="button"
-            onClick={() => setActiveTab('atom')}
-            className={`hover:text-slate-900 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-              activeTab === 'atom' ? 'text-slate-900 underline' : ''
-            }`}
-          >
-            Inspector
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('presets')}
-            className={`hover:text-slate-900 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-              activeTab === 'presets' ? 'text-slate-900 underline' : ''
-            }`}
-          >
-            Library
-          </button>
-          <button
-            type="button"
-            onClick={() => setReferenceOpen(true)}
-            className="hover:text-slate-900 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            VSEPR Table
-          </button>
-          <button
-            type="button"
-            onClick={() => setSmilesGuideOpen(true)}
-            className="hover:text-slate-900 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            SMILES Guide
-          </button>
-        </nav>
-
-        <div className="justify-self-end flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setReferenceOpen(true)}
-            className="md:hidden rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap cursor-pointer"
-          >
-            VSEPR
-          </button>
-          <button
-            type="button"
-            onClick={() => viewportRef.current?.exportPng()}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            <Camera className="h-3.5 w-3.5" />
-            <span>Export PNG</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Main Split Workspace */}
-      <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
-        {/* Left Minimalist SMILES & VSEPR Rail */}
-        <aside className="flex w-full lg:w-[300px] xl:w-[316px] shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-slate-200 bg-[#FAFAFA] max-h-[38vh] lg:max-h-none overflow-hidden">
+    <div className="flex h-screen w-screen flex-col lg:flex-row overflow-hidden bg-white text-slate-900">
+      {/* Left Minimalist SMILES & VSEPR Rail */}
+      <aside className="flex w-full lg:w-[308px] xl:w-[324px] shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-slate-200 bg-[#FAFAFA] max-h-[34vh] lg:max-h-none overflow-hidden">
           {/* SMILES Input */}
-          <div className="border-b border-slate-200 bg-white p-3">
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <label
-                htmlFor="smiles-input"
-                className="text-xs font-medium text-slate-700"
-              >
-                SMILES Input
-              </label>
-              <button
-                type="button"
-                onClick={() => setSmilesGuideOpen(true)}
-                className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-800 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <HelpCircle className="h-3 w-3" />
-                <span>Syntax</span>
-              </button>
-            </div>
+          <div className="border-b border-slate-200 bg-white p-3.5">
+            <label
+              htmlFor="smiles-input"
+              className="block text-xs font-medium text-slate-700 mb-1.5"
+            >
+              SMILES Input
+            </label>
 
             <form onSubmit={handleSmilesSubmit} className="flex items-center gap-2">
               <input
@@ -345,8 +273,8 @@ export default function App() {
           </div>
 
           {/* Minimal Segmented Tabs */}
-          <div className="border-b border-slate-200 bg-white px-3 py-1.5">
-            <div className="grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-0.5">
+          <div className="border-b border-slate-200 bg-white px-3.5 py-2">
+            <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-0.5">
               {(
                 [
                   ['atom', 'Inspector'],
@@ -358,7 +286,7 @@ export default function App() {
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`rounded px-2 py-1 text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                  className={`rounded-md px-2 py-1 text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
                     activeTab === tab
                       ? 'bg-white text-slate-900 shadow-xs'
                       : 'text-slate-500 hover:text-slate-900'
@@ -371,7 +299,7 @@ export default function App() {
           </div>
 
           {/* Rail Content */}
-          <div className="flex-1 overflow-y-auto lab-scroll p-3 space-y-3">
+          <div className="flex-1 overflow-y-auto lab-scroll p-3.5 space-y-3.5">
             {activeTab === 'atom' && selectedAtom && (
               <>
                 {/* Selected Atom Identity */}
@@ -483,7 +411,7 @@ export default function App() {
                 </div>
 
                 {/* Concise VSEPR Note */}
-                <div className="border-t border-slate-200 pt-2.5">
+                <div className="border-t border-slate-200 pt-3">
                   <p className="text-xs leading-relaxed text-slate-600">
                     {getVseprExplanation(selectedAtom)}
                   </p>
@@ -491,15 +419,15 @@ export default function App() {
 
                 {/* Measured 3D Bond Angles */}
                 {selectedAtom.measuredAngles.length > 0 && (
-                  <div className="border-t border-slate-200 pt-2.5">
-                    <div className="text-xs font-medium text-slate-700 mb-1.5">
+                  <div className="border-t border-slate-200 pt-3">
+                    <div className="text-xs font-medium text-slate-700 mb-2">
                       3D Bond Angles
                     </div>
                     <div className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white text-xs">
                       {selectedAtom.measuredAngles.map((ang, idx) => (
                         <div
                           key={`${ang.atomA}-${ang.atomB}-${idx}`}
-                          className="flex items-center justify-between px-2.5 py-1.5"
+                          className="flex items-center justify-between px-3 py-1.5"
                         >
                           <span className="font-mono text-slate-600">
                             {ang.labelA}–{selectedAtom.symbol}
@@ -516,8 +444,8 @@ export default function App() {
 
                 {/* RDKit Molecular Descriptors & Identifiers */}
                 {molecule.summary.rdkit && (
-                  <div className="border-t border-slate-200 pt-2.5">
-                    <div className="flex items-center justify-between mb-1.5">
+                  <div className="border-t border-slate-200 pt-3">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium text-slate-700">
                         RDKit Properties
                       </span>
@@ -734,7 +662,7 @@ export default function App() {
         </aside>
 
         {/* Main Pure White 3D Molecular Viewport Stage */}
-        <main className="relative flex-1 min-h-[420px] lg:min-h-0 overflow-hidden bg-white">
+        <main className="relative flex-1 min-h-[340px] lg:min-h-0 overflow-hidden bg-white">
           <MoleculeViewport3D
             ref={viewportRef}
             molecule={molecule}
@@ -744,22 +672,204 @@ export default function App() {
               if (id !== null) setActiveTab('atom');
             }}
             renderStyle={renderStyle}
-            onChangeRenderStyle={setRenderStyle}
             showLonePairs={showLonePairs}
-            onToggleLonePairs={() => setShowLonePairs((v) => !v)}
             showHybridOrbitals={showHybridOrbitals}
-            onToggleHybridOrbitals={() => setShowHybridOrbitals((v) => !v)}
             showBondAngles={showBondAngles}
-            onToggleBondAngles={() => setShowBondAngles((v) => !v)}
             showVseprCage={showVseprCage}
-            onToggleVseprCage={() => setShowVseprCage((v) => !v)}
             showLabels={showLabels}
-            onToggleLabels={() => setShowLabels((v) => !v)}
             autoSpin={autoSpin}
-            onToggleAutoSpin={() => setAutoSpin((v) => !v)}
           />
         </main>
-      </div>
+
+        {/* Fixed Right-Docked Display & Reference Options Rail */}
+        <aside className="flex w-full lg:w-[216px] xl:w-[228px] shrink-0 flex-col border-t lg:border-t-0 lg:border-l border-slate-200 bg-[#FAFAFA] max-h-[30vh] lg:max-h-none overflow-hidden">
+          <div className="flex-1 overflow-y-auto lab-scroll p-3.5 space-y-3.5">
+            {/* Render Style */}
+            <div>
+              <div className="text-xs font-medium text-slate-700 mb-2">
+                Render Style
+              </div>
+              <div className="flex flex-col gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5">
+                {(
+                  [
+                    ['ball-stick', 'Ball & Stick'],
+                    ['space-fill', 'Space-Fill'],
+                    ['wireframe', 'Wireframe'],
+                  ] as const
+                ).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setRenderStyle(mode)}
+                    className={`flex h-7 w-full items-center px-2.5 text-left text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                      renderStyle === mode
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chemistry Overlays */}
+            <div className="border-t border-slate-200 pt-3">
+              <div className="text-xs font-medium text-slate-700 mb-2">
+                Overlays
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setShowLonePairs((v) => !v)}
+                  className={`flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
+                    showLonePairs
+                      ? 'bg-amber-50 border-amber-300 text-amber-900'
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <CircleDot className="h-3.5 w-3.5 shrink-0" />
+                  <span>Lone Pairs</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowHybridOrbitals((v) => !v)}
+                  className={`flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
+                    showHybridOrbitals
+                      ? 'bg-sky-50 border-sky-300 text-sky-900'
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                  <span>Orbitals</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowBondAngles((v) => !v)}
+                  className={`flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
+                    showBondAngles
+                      ? 'bg-sky-50 border-sky-300 text-sky-900'
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <Compass className="h-3.5 w-3.5 shrink-0" />
+                  <span>Angles</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowVseprCage((v) => !v)}
+                  className={`flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
+                    showVseprCage
+                      ? 'bg-sky-50 border-sky-300 text-sky-900'
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <Box className="h-3.5 w-3.5 shrink-0" />
+                  <span>Cage</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowLabels((v) => !v)}
+                  className={`flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
+                    showLabels
+                      ? 'bg-slate-900 border-slate-900 text-white'
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <Tag className="h-3.5 w-3.5 shrink-0" />
+                  <span>Labels</span>
+                </button>
+              </div>
+
+              {/* Lone-Pair Color Key */}
+              <div className="mt-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 space-y-1 text-[11px] text-slate-600">
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="inline-block h-2 w-2 rounded-full bg-amber-600 shrink-0" />
+                  <span>Localized LP</span>
+                </div>
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="inline-block h-2 w-2 rounded-full bg-violet-600 shrink-0" />
+                  <span>π-conjugated LP</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Motion & Camera */}
+            <div className="border-t border-slate-200 pt-3">
+              <div className="text-xs font-medium text-slate-700 mb-2">
+                View
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setAutoSpin((v) => !v)}
+                  className={`flex h-7 w-full items-center justify-center gap-1.5 rounded-md px-2 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
+                    autoSpin
+                      ? 'bg-slate-900 border-slate-900 text-white'
+                      : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {autoSpin ? (
+                    <Pause className="h-3.5 w-3.5 shrink-0" />
+                  ) : (
+                    <Play className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span>{autoSpin ? 'Pause' : 'Spin'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => viewportRef.current?.resetCamera()}
+                  className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md px-2 text-xs font-medium border border-slate-200 bg-white text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 shrink-0" />
+                  <span>Reset</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Reference Guides */}
+            <div className="border-t border-slate-200 pt-3">
+              <div className="text-xs font-medium text-slate-700 mb-2">
+                Reference
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setReferenceOpen(true)}
+                  className="flex h-7 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  <span>VSEPR Table</span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSmilesGuideOpen(true)}
+                  className="flex h-7 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  <span>SMILES Guide</span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Export Action */}
+          <div className="border-t border-slate-200 bg-white p-3.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => viewportRef.current?.exportPng()}
+              className="flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 text-xs font-medium text-white hover:bg-slate-800 transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <Camera className="h-3.5 w-3.5 shrink-0" />
+              <span>Export PNG</span>
+            </button>
+          </div>
+        </aside>
 
       {/* Interactive VSEPR Reference Table Modal */}
       <VseprReferenceModal
