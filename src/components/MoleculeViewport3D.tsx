@@ -26,6 +26,7 @@ interface MoleculeViewport3DProps {
   showHybridOrbitals: boolean;
   showBondAngles: boolean;
   showVseprCage: boolean;
+  showVdwSpheres: boolean;
   showLabels: boolean;
   autoSpin: boolean;
 }
@@ -110,6 +111,7 @@ export const MoleculeViewport3D = forwardRef<
     showHybridOrbitals,
     showBondAngles,
     showVseprCage,
+    showVdwSpheres,
     showLabels,
     autoSpin,
   },
@@ -137,6 +139,7 @@ export const MoleculeViewport3D = forwardRef<
     showHybridOrbitals,
     showBondAngles,
     showVseprCage,
+    showVdwSpheres,
     showLabels,
     autoSpin,
   });
@@ -149,6 +152,7 @@ export const MoleculeViewport3D = forwardRef<
     showHybridOrbitals,
     showBondAngles,
     showVseprCage,
+    showVdwSpheres,
     showLabels,
     autoSpin,
   };
@@ -1150,6 +1154,34 @@ export const MoleculeViewport3D = forwardRef<
       }
     }
 
+    // 7. Render translucent Van der Waals steric envelopes around atoms
+    if (showVdwSpheres && renderStyle !== 'space-fill') {
+      const vdwGeo = new THREE.SphereGeometry(1, 32, 24);
+      const vdwMatCache = new Map<string, THREE.MeshLambertMaterial>();
+
+      for (const atom of molecule.atoms) {
+        const tintHex = needsLightOutline(atom.cpkColor)
+          ? '#94A3B8'
+          : atom.cpkColor;
+        let vdwMat = vdwMatCache.get(tintHex);
+        if (!vdwMat) {
+          vdwMat = new THREE.MeshLambertMaterial({
+            color: new THREE.Color(tintHex),
+            transparent: true,
+            opacity: 0.22,
+            depthWrite: false,
+            side: THREE.FrontSide,
+          });
+          vdwMatCache.set(tintHex, vdwMat);
+        }
+        const vdwMesh = new THREE.Mesh(vdwGeo, vdwMat);
+        vdwMesh.position.set(atom.position.x, atom.position.y, atom.position.z);
+        vdwMesh.scale.setScalar(atom.vdwRadius * 0.96);
+        vdwMesh.renderOrder = 2;
+        s.overlayGroup.add(vdwMesh);
+      }
+    }
+
     s.requestRender();
   }, [
     molecule,
@@ -1159,6 +1191,7 @@ export const MoleculeViewport3D = forwardRef<
     showHybridOrbitals,
     showBondAngles,
     showVseprCage,
+    showVdwSpheres,
   ]);
 
   // Reset camera smoothly when molecule SMILES/identity changes

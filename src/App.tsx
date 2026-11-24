@@ -4,6 +4,7 @@ import {
   Box,
   Camera,
   ChevronRight,
+  CircleDashed,
   CircleDot,
   Compass,
   Crosshair,
@@ -121,6 +122,7 @@ export default function App() {
   const [showHybridOrbitals, setShowHybridOrbitals] = useState(false);
   const [showBondAngles, setShowBondAngles] = useState(true);
   const [showVseprCage, setShowVseprCage] = useState(true);
+  const [showVdwSpheres, setShowVdwSpheres] = useState(false);
   const [showLabels, setShowLabels] = useState(true);
   const [autoSpin, setAutoSpin] = useState(false);
 
@@ -200,9 +202,9 @@ export default function App() {
     : molecule.atoms.filter((a) => a.symbol !== 'H');
 
   return (
-    <div className="flex h-screen w-screen flex-col lg:flex-row overflow-hidden bg-white text-slate-900">
+    <div className="flex h-screen w-screen flex-col md:flex-row overflow-hidden bg-white text-slate-900">
       {/* Left Minimalist SMILES & VSEPR Rail */}
-      <aside className="flex w-full lg:w-[308px] xl:w-[324px] shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-slate-200 bg-[#FAFAFA] max-h-[34vh] lg:max-h-none overflow-hidden">
+      <aside className="flex w-full md:w-[276px] lg:w-[308px] xl:w-[324px] shrink-0 flex-col border-b md:border-b-0 md:border-r border-slate-200 bg-[#FAFAFA] max-h-[34vh] md:max-h-none overflow-hidden">
           {/* SMILES Input */}
           <div className="border-b border-slate-200 bg-white p-3.5">
             <label
@@ -662,7 +664,7 @@ export default function App() {
         </aside>
 
         {/* Main Pure White 3D Molecular Viewport Stage */}
-        <main className="relative flex-1 min-h-[340px] lg:min-h-0 overflow-hidden bg-white">
+        <main className="relative flex-1 min-h-[340px] md:min-h-0 overflow-hidden bg-white">
           <MoleculeViewport3D
             ref={viewportRef}
             molecule={molecule}
@@ -676,13 +678,14 @@ export default function App() {
             showHybridOrbitals={showHybridOrbitals}
             showBondAngles={showBondAngles}
             showVseprCage={showVseprCage}
+            showVdwSpheres={showVdwSpheres}
             showLabels={showLabels}
             autoSpin={autoSpin}
           />
         </main>
 
         {/* Fixed Right-Docked Display & Reference Options Rail */}
-        <aside className="flex w-full lg:w-[216px] xl:w-[228px] shrink-0 flex-col border-t lg:border-t-0 lg:border-l border-slate-200 bg-[#FAFAFA] max-h-[30vh] lg:max-h-none overflow-hidden">
+        <aside className="flex w-full md:w-[196px] lg:w-[216px] xl:w-[228px] shrink-0 flex-col border-t md:border-t-0 md:border-l border-slate-200 bg-[#FAFAFA] max-h-[30vh] md:max-h-none overflow-hidden">
           <div className="flex-1 overflow-y-auto lab-scroll p-3.5 space-y-3.5">
             {/* Render Style */}
             <div>
@@ -769,6 +772,19 @@ export default function App() {
                 >
                   <Box className="h-3.5 w-3.5 shrink-0" />
                   <span>Cage</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowVdwSpheres((v) => !v)}
+                  className={`flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer ${
+                    showVdwSpheres
+                      ? 'bg-sky-50 border-sky-300 text-sky-900'
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <CircleDashed className="h-3.5 w-3.5 shrink-0" />
+                  <span>VdW Spheres</span>
                 </button>
 
                 <button

@@ -171,7 +171,7 @@ def parse_and_calculate_with_rdkit(raw_smiles: str) -> tuple[dict[str, Any], dic
                 else:
                     raise ValueError(_format_rdkit_error(log_msg, smiles))
 
-            if base_mol is None:
+            if base_mol is None or base_mol.GetNumAtoms() == 0:
                 raise ValueError(_format_rdkit_error(log_stream.getvalue(), smiles))
         finally:
             rdkit_logger.removeHandler(handler)
@@ -205,6 +205,7 @@ def parse_and_calculate_with_rdkit(raw_smiles: str) -> tuple[dict[str, Any], dic
         else:
             try:
                 target_mol.UpdatePropertyCache(strict=False)
+                Chem.FastFindRings(target_mol)
             except Exception:
                 pass
 
@@ -244,7 +245,10 @@ def parse_and_calculate_with_rdkit(raw_smiles: str) -> tuple[dict[str, Any], dic
                 pt = conf.GetAtomPosition(idx)
                 rdkit_coords_2d.append({"x": float(pt.x), "y": float(pt.y)})
 
-        atom_rings = [list(r) for r in target_mol.GetRingInfo().AtomRings()]
+        try:
+            atom_rings = [list(r) for r in target_mol.GetRingInfo().AtomRings()]
+        except Exception:
+            atom_rings = []
 
         atoms: list[dict[str, Any]] = []
         for idx, atom in enumerate(target_mol.GetAtoms()):

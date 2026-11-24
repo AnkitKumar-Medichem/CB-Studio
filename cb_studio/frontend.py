@@ -40,9 +40,9 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
   </head>
   <body class="bg-white text-slate-900 antialiased selection:bg-sky-500/20 selection:text-slate-900">
     <div id="root" class="h-screen w-screen overflow-hidden">
-      <div class="flex h-screen w-screen flex-col lg:flex-row overflow-hidden bg-white text-slate-900">
+      <div class="flex h-screen w-screen flex-col md:flex-row overflow-hidden bg-white text-slate-900">
         <!-- Left Minimalist SMILES & VSEPR Rail -->
-        <aside class="flex w-full lg:w-[308px] xl:w-[324px] shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-slate-200 bg-[#FAFAFA] max-h-[34vh] lg:max-h-none overflow-hidden">
+        <aside class="flex w-full md:w-[276px] lg:w-[308px] xl:w-[324px] shrink-0 flex-col border-b md:border-b-0 md:border-r border-slate-200 bg-[#FAFAFA] max-h-[34vh] md:max-h-none overflow-hidden">
             <!-- SMILES Input -->
             <div class="border-b border-slate-200 bg-white p-3.5">
               <label for="smiles-input" class="block text-xs font-medium text-slate-700 mb-1.5">
@@ -92,7 +92,7 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
           </aside>
 
           <!-- Main Pure White 3D Molecular Viewport Stage -->
-          <main class="relative flex-1 min-h-[340px] lg:min-h-0 overflow-hidden bg-white">
+          <main class="relative flex-1 min-h-[340px] md:min-h-0 overflow-hidden bg-white">
             <div id="viewport-container" class="relative w-full h-full overflow-hidden bg-white select-none">
               <div id="webgl-mount" class="w-full h-full"></div>
 
@@ -117,7 +117,7 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
           <!-- Fixed Right-Docked Display & Reference Options Rail -->
           <aside
             id="right-control-panel"
-            class="flex w-full lg:w-[216px] xl:w-[228px] shrink-0 flex-col border-t lg:border-t-0 lg:border-l border-slate-200 bg-[#FAFAFA] max-h-[30vh] lg:max-h-none overflow-hidden"
+            class="flex w-full md:w-[196px] lg:w-[216px] xl:w-[228px] shrink-0 flex-col border-t md:border-t-0 md:border-l border-slate-200 bg-[#FAFAFA] max-h-[30vh] md:max-h-none overflow-hidden"
           >
             <div class="flex-1 overflow-y-auto lab-scroll p-3.5 space-y-3.5">
               <!-- Render Style -->
@@ -153,6 +153,10 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
                   <button id="toggle-cage-btn" type="button" class="flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer bg-sky-50 border-sky-300 text-sky-900">
                     <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                     <span>Cage</span>
+                  </button>
+                  <button id="toggle-vdw-btn" type="button" class="flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer bg-white border-slate-200 text-slate-500 hover:text-slate-900">
+                    <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></svg>
+                    <span>VdW Spheres</span>
                   </button>
                   <button id="toggle-labels-btn" type="button" class="flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-xs font-medium border transition-colors whitespace-nowrap cursor-pointer bg-slate-900 border-slate-900 text-white">
                     <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
@@ -305,7 +309,7 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
               if (window.parent.innerHeight) h = window.parent.innerHeight;
             }} catch (e) {{}}
             window.parent.postMessage(
-              {{ isStreamlitMessage: true, type: 'streamlit:setFrameHeight', height: Math.max(640, h) }},
+              {{ isStreamlitMessage: true, type: 'streamlit:setFrameHeight', height: Math.max(480, h) }},
               '*'
             );
           }};
@@ -341,6 +345,7 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
         showHybridOrbitals: false,
         showBondAngles: true,
         showVseprCage: true,
+        showVdwSpheres: false,
         showLabels: true,
         autoSpin: false,
         referenceOpen: false,
@@ -1132,6 +1137,30 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
             }}
           }}
 
+          if (state.showVdwSpheres && state.renderStyle !== 'space-fill') {{
+            const vdwGeo = new THREE.SphereGeometry(1, 32, 24);
+            const vdwMatCache = new Map();
+            for (const atom of molecule.atoms) {{
+              const tintHex = needsLightOutline(atom.cpkColor) ? '#94A3B8' : atom.cpkColor;
+              let vdwMat = vdwMatCache.get(tintHex);
+              if (!vdwMat) {{
+                vdwMat = new THREE.MeshLambertMaterial({{
+                  color: new THREE.Color(tintHex),
+                  transparent: true,
+                  opacity: 0.22,
+                  depthWrite: false,
+                  side: THREE.FrontSide,
+                }});
+                vdwMatCache.set(tintHex, vdwMat);
+              }}
+              const vdwMesh = new THREE.Mesh(vdwGeo, vdwMat);
+              vdwMesh.position.set(atom.position.x, atom.position.y, atom.position.z);
+              vdwMesh.scale.setScalar(atom.vdwRadius * 0.96);
+              vdwMesh.renderOrder = 2;
+              overlayGroup.add(vdwMesh);
+            }}
+          }}
+
           // Sync projected label DOM nodes
           if (state.showLabels && molecule) {{
             labelLayer.innerHTML = molecule.atoms.map((a) => {{
@@ -1294,6 +1323,7 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
         setBtn('toggle-orbitals-btn', state.showHybridOrbitals, 'bg-sky-50 border-sky-300 text-sky-900', 'bg-white border-slate-200 text-slate-500 hover:text-slate-900');
         setBtn('toggle-angles-btn', state.showBondAngles, 'bg-sky-50 border-sky-300 text-sky-900', 'bg-white border-slate-200 text-slate-500 hover:text-slate-900');
         setBtn('toggle-cage-btn', state.showVseprCage, 'bg-sky-50 border-sky-300 text-sky-900', 'bg-white border-slate-200 text-slate-500 hover:text-slate-900');
+        setBtn('toggle-vdw-btn', state.showVdwSpheres, 'bg-sky-50 border-sky-300 text-sky-900', 'bg-white border-slate-200 text-slate-500 hover:text-slate-900');
         setBtn('toggle-labels-btn', state.showLabels, 'bg-slate-900 border-slate-900 text-white', 'bg-white border-slate-200 text-slate-500 hover:text-slate-900');
 
         const spinBtn = document.getElementById('toggle-spin-btn');
@@ -1682,6 +1712,11 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
         renderRightControls();
         viewport.rebuildScene();
       }});
+      document.getElementById('toggle-vdw-btn').addEventListener('click', () => {{
+        state.showVdwSpheres = !state.showVdwSpheres;
+        renderRightControls();
+        viewport.rebuildScene();
+      }});
       document.getElementById('toggle-labels-btn').addEventListener('click', () => {{
         state.showLabels = !state.showLabels;
         renderRightControls();
@@ -1716,12 +1751,20 @@ def build_frontend_html(initial_molecule: dict[str, Any]) -> str:
 
         if (args.molecule && args.molecule.summary) {{
           const changed = state.molecule?.summary?.smiles !== args.molecule.summary.smiles;
+          const hadError = Boolean(state.errorMsg);
           state.molecule = args.molecule;
           state.errorMsg = null;
           if (changed) {{
             state.selectedAtomId = args.molecule.summary.primaryCenterId ?? null;
             state.smilesInput = args.molecule.summary.smiles;
             document.getElementById('smiles-input').value = state.smilesInput;
+          }}
+          if (reqId === null && !changed && !hadError) {{
+            return;
+          }}
+          if (!changed && hadError) {{
+            renderErrorBox();
+            return;
           }}
           syncUI();
         }}
